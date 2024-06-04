@@ -1,5 +1,6 @@
 import { noMetafields, METAFIELDS, metaFieldToDefault, EMPTYFIELD } from "./metafields";
-import { lookup, stringIsNullOrEmpty, has, compare } from "./utility";
+import { stringIsNullOrEmpty, has, compare } from "./utility";
+import { lookup } from "./lookup"
 
 export const empty = (dtoblueprint, initvalues) => {
     const schema = dtoblueprint.schema;
@@ -121,5 +122,5 @@ const build = (dtoblueprint, data) => {
         };
     }
 
-    const buildData =  build(dtoblueprint, data);
+    const buildData =  baseBuild(dtoblueprint, data);
 };

@@ -24,11 +24,11 @@ export const RequestConfig = (config) => {
     };
 
     const getJSON = () => buildRequestConfig(merge(standard(), config));
-    const sendJSON = (data) => buildRequestConfig(merge(standard(), config, { method: "POST", body: JSON.stringify(data) }));
+    const postJSON = (data) => buildRequestConfig(merge(standard(), config, { method: "POST", body: JSON.stringify(data) }));
 
     return {
         getJSON,
-        sendJSON
+        postJSON
     };
 };
 
@@ -38,15 +38,6 @@ const AppOrigin = () => {
 
 export const requestURL = ({url = "", queryParams = {}, urlParams = {}, origin = new URL(AppOrigin()).origin}) => {
     const removeMetafields = (params) => {
-        const queryParamsCopy = { ...params };
-        METAFIELDS.forEach((METAFIELDIDENT) => {
-            delete queryParamsCopy[METAFIELDIDENT];
-        });
-
-        return queryParamsCopy;
-    };
-
-    const betterRemoveMetafields = (params) => {
         return Object
             .keys(params)
             .filter((fieldIdent) => METAFIELDS.indexOf(fieldIdent) == -1)
@@ -54,7 +45,7 @@ export const requestURL = ({url = "", queryParams = {}, urlParams = {}, origin =
     };
 
     const insertURLParams = (url) => {
-        const withoutMetafields = betterRemoveMetafields(urlParams);
+        const withoutMetafields = removeMetafields(urlParams);
         const replaceInfos = Object.keys(withoutMetafields)
             .map((paramIdent) => {
                 const name = "{" + paramIdent + "}";
@@ -77,12 +68,7 @@ export const requestURL = ({url = "", queryParams = {}, urlParams = {}, origin =
         };
     };
 
-    const appendQueryParams = (url) => {
-        const withoutMetafields = betterRemoveMetafields(queryParams);
-
-        return queryHelper(url, withoutMetafields, origin);
-    };
-
+    const appendQueryParams = (url) => queryHelper(url, removeMetafields(queryParams), origin);
     const urlWithQueryparams = appendQueryParams(url);
     const urlComplete = insertURLParams(urlWithQueryparams);
 
@@ -123,7 +109,7 @@ export const Request = () => {
                 extended.response.arrayBuffer().then(
                     (buffer) =>
                         merge(res, {
-                            result: new TextDecoder("UTF-8").decode(buffer),
+                            result: new TextDecoder("UTF-8").decode(buffer)
                         })
                   )
             ));
@@ -131,8 +117,8 @@ export const Request = () => {
 
     const secureParse = (response) => {
         const parseble = response.result === ""
-            ? JSONtryparse(response.result)
-            : true;
+            ? false
+            : JSONtryparse(response.result);
 
         return {
             success: parseble,
@@ -140,7 +126,7 @@ export const Request = () => {
         };
     };
 
-    const secureConvert = (response) => {
+    const secureConvert = (response, schema) => {
         const parsed = secureParse();
 
         if (!parsed.success) {
